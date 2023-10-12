@@ -4,6 +4,7 @@
   "description": "",
   "main": "pathfinder.js",
   "scripts": {
+    "start": "node pathfinder.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

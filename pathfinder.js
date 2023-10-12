@@ -1,49 +1,41 @@
 import fetch from 'node-fetch';
 
 const processCode = (code) => {
-  
-  const responses = [];
   const apiUrl = 'https://sitecoreopenai-sandbox-et.openai.azure.com/openai/deployments/GPT-Test/chat/completions?api-version=2023-07-01-preview';
 
   const headers = {
     'Content-Type': 'application/json',
-    'api-key': '<YOUR API KEY HERE>',
+    'api-key': '95e3d36e83884506ae19c44fc482ac05',
   };
 
-  // Goes through each substring in array
-  for (let i = 0; i < code.length; i++) {
-    // Creates a request for GPT asking for possible metadata from the current substring of the source code - PROMPT IS IN "CONTENT"
-    const requestData = {
-      messages: [
-        { role: 'user', content: `Can you find tags representing the title, image URL, and description attributes in the following code sample? Return ONLY an array containing objects with the name of the attribute and an xpath expression to target it. There should be no further explanation. If there is no relevant metadata, return []. ${code[i]}`},
-      ],
-    };
-    
-    // Hits GPT API
-    fetch(apiUrl, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(requestData),
+  // Creates a request for GPT asking for possible metadata from the current substring of the source code - PROMPT IS IN "CONTENT"
+  const requestData = {
+    messages: [
+      {
+        role: 'user',
+        content: `Can you find tags representing the title, image URL, and description attributes in the following code sample? Return one  array containing three objects. Each object should have the attribute and an xpath expression to target it. If you cannot find objects, return an array of strings. There should be no further explanation. If there is no relevant metadata, return []. ${code}`
+      },
+    ],
+  };
+
+  return fetch(apiUrl, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(requestData),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      const tempArr = data.choices[0].message.content
+      return tempArr
     })
-      .then((response) => response.json())
-      .then((data) => {
-        let tempArr = JSON.parse(data.choices[0].message.content)
-        console.log(tempArr);
-        // Pushes the response, which should be an array of attribute objects, to the response array
-        responses.push(...tempArr);
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-    
-  }  
-  console.log(responses);
+    .catch((error) => {
+      console.error('Error:', error);
+    });
 }
 
 
-const getSourceCode = () => {
-  const textSegments = [];
-  fetch('https://doc.sitecore.com/search/en/users/search-user-guide/sources.html')
+function getSourceCode() {
+  return fetch('https://doc.sitecore.com/search/en/users/search-user-guide/sources.html')
     .then(response => {
       if (response.ok) {
         return response.text();
@@ -51,19 +43,34 @@ const getSourceCode = () => {
         throw new Error('Network response was not ok');
       }
     })
-    .then(sourceCode => {
-      // console.log(sourceCode);
-      let maxTokens = 2040;
-      const stringWithoutTabs = sourceCode.replace(/\t|\n/g, " ");
-      for (let i = 0; i < stringWithoutTabs.length; i += maxTokens) {
-        textSegments.push(stringWithoutTabs.substring(i, i + maxTokens));
-      }
-      processCode(textSegments);
-    })
     .catch(error => {
       console.error('Error:', error);
     });
-    
 }
 
-getSourceCode();
+
+function chunkSourceCode(sourceCode) {
+  const textSegments = [];
+  const maxTokens = 2040;
+  const stringWithoutTabs = sourceCode.replace(/\t|\n/g, " ");
+  for (let i = 0; i < stringWithoutTabs.length; i += maxTokens) {
+    textSegments.push(stringWithoutTabs.substring(i, i + maxTokens));
+  }
+  return textSegments
+}
+
+
+async function pathFinder() {
+  const sourceCode = await getSourceCode();
+  const chunkedCode = chunkSourceCode(sourceCode);
+
+  const aiReponsePromise = chunkedCode.map(code => processCode(code))
+  
+  console.log('Fetching AI reponses...')
+  
+  const responses = await Promise.all(aiReponsePromise)
+
+  responses.forEach(resp => console.log(resp))
+}
+
+pathFinder()
