@@ -1,4 +1,7 @@
 import fetch from 'node-fetch';
+import axios from 'axios'; 
+import { JSDOM } from 'jsdom';  
+import fs from 'fs'; 
 
 const processCode = (code) => {
   const apiUrl = 'https://sitecoreopenai-sandbox-et.openai.azure.com/openai/deployments/GPT-Test/chat/completions?api-version=2023-07-01-preview';
@@ -12,10 +15,18 @@ const processCode = (code) => {
   const requestData = {
     messages: [
       {
+        "role":"system","content":"Only respond with an array of objects with no other text. The objects should have the following format: {name: '', xpath: ''}"
+      },
+      // {
+      //   role: 'user',
+      //   content: 'Can you look at the following URL: https://www.pbs.org/parents/halloween and give me a synopsis of what the page is about?'
+      // }
+      {
         role: 'user',
-        content: `Can you find tags representing the title, image URL, and description attributes in the following code sample? Return one  array containing three objects. Each object should have the attribute and an xpath expression to target it. If you cannot find objects, return an array of strings. There should be no further explanation. If there is no relevant metadata, return []. ${code}`
+        content: `Can you look at the following source code: ${code}, then find attributes that represent the title, description, image URL, and subtitle along with xpath expressions for extracting those attributes?`
       },
     ],
+    "temperature": 0,
   };
 
   return fetch(apiUrl, {
@@ -26,28 +37,34 @@ const processCode = (code) => {
     .then((response) => response.json())
     .then((data) => {
       const tempArr = data.choices[0].message.content
-      return tempArr
+      console.log(tempArr);
     })
     .catch((error) => {
       console.error('Error:', error);
     });
 }
 
+// function getSourceCode() {
+//   return fetch('https://doc.sitecore.com/search/en/users/search-user-guide/sources.html')
+//     .then(response => {
+//       if (response.ok) {
+//         return response.text();
+//       } else {
+//         throw new Error('Network response was not ok');
+//       }
+//     })
+//     .catch(error => {
+//       console.error('Error:', error);
+//     });
+// }
 
-function getSourceCode() {
-  return fetch('https://doc.sitecore.com/search/en/users/search-user-guide/sources.html')
-    .then(response => {
-      if (response.ok) {
-        return response.text();
-      } else {
-        throw new Error('Network response was not ok');
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-    });
-}
-
+async function extractHeadFromUrl(url) {  
+  const response = await axios.get(url);  
+  const html = response.data;  
+  const dom = new JSDOM(html);  
+  const head = dom.window.document.head;  
+  return head.outerHTML;  
+}  
 
 function chunkSourceCode(sourceCode) {
   const textSegments = [];
@@ -61,7 +78,7 @@ function chunkSourceCode(sourceCode) {
 
 
 async function pathFinder() {
-  const sourceCode = await getSourceCode();
+  const sourceCode = await extractHeadFromUrl('https://www.pbs.org/parents/halloween');
   const chunkedCode = chunkSourceCode(sourceCode);
 
   const aiReponsePromise = chunkedCode.map(code => processCode(code))
