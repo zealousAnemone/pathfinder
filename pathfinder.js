@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom';
 import fs from 'fs'; 
 
 const processCode = (code) => {
+
   const apiUrl = 'https://sitecoreopenai-sandbox-et.openai.azure.com/openai/deployments/GPT-Test/chat/completions?api-version=2023-07-01-preview';
 
   const headers = {
@@ -11,11 +12,10 @@ const processCode = (code) => {
     'api-key': '95e3d36e83884506ae19c44fc482ac05',
   };
 
-  // Creates a request for GPT asking for possible metadata from the current substring of the source code - PROMPT IS IN "CONTENT"
   const requestData = {
     messages: [
       {
-        "role":"system","content":"Only respond with an array of objects with no other text. The objects should have the following format: {name: '', xpath: ''}"
+        "role":"system","content":"Only respond with an array of objects with no other text. The objects should have the following format: {name: '', xpath: ''}. If there is no valid array of objects to return, just return an empty array."
       },
       // {
       //   role: 'user',
@@ -58,6 +58,7 @@ const processCode = (code) => {
 //     });
 // }
 
+// This is just another version of the "getSourceCode" function that gets JUST the head.
 async function extractHeadFromUrl(url) {  
   const response = await axios.get(url);  
   const html = response.data;  
@@ -68,16 +69,18 @@ async function extractHeadFromUrl(url) {
 
 function chunkSourceCode(sourceCode) {
   const textSegments = [];
-  const maxTokens = 2040;
-  const stringWithoutTabs = sourceCode.replace(/\t|\n/g, " ");
+  const maxTokens = 4000;
+  const stringWithoutTabs = sourceCode.replace(/\s{2,}/g, ' ');
+  
   for (let i = 0; i < stringWithoutTabs.length; i += maxTokens) {
     textSegments.push(stringWithoutTabs.substring(i, i + maxTokens));
   }
-  return textSegments
+  return textSegments;
 }
 
 
 async function pathFinder() {
+
   const sourceCode = await extractHeadFromUrl('https://www.pbs.org/parents/halloween');
   const chunkedCode = chunkSourceCode(sourceCode);
 
@@ -90,4 +93,4 @@ async function pathFinder() {
   responses.forEach(resp => console.log(resp))
 }
 
-pathFinder()
+pathFinder();
