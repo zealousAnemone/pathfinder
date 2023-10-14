@@ -3,6 +3,8 @@ import axios from 'axios';
 import { JSDOM } from 'jsdom';  
 import fs from 'fs'; 
 
+const attributes = [];
+
 const processCode = (code) => {
 
   const apiUrl = 'https://sitecoreopenai-sandbox-et.openai.azure.com/openai/deployments/GPT-Test/chat/completions?api-version=2023-07-01-preview';
@@ -15,7 +17,7 @@ const processCode = (code) => {
   const requestData = {
     messages: [
       {
-        "role":"system","content":"Only respond with an array of objects with no other text. The objects should have the following format: {name: '', xpath: ''}. If there is no valid array of objects to return, just return an empty array."
+        "role":"system","content":"Only respond with an array of objects with no other text. The objects should have the following format: {\"name\": \"\", \"xpath\": \"\"}. If there is no valid array of objects to return, just return an empty array."
       },
       // {
       //   role: 'user',
@@ -37,7 +39,9 @@ const processCode = (code) => {
     .then((response) => response.json())
     .then((data) => {
       const tempArr = data.choices[0].message.content
-      console.log(tempArr)
+      let actualArr = JSON.parse(tempArr.replace(/\n|\s/g, ''))
+      attributes.push(...actualArr)
+      return attributes;
     })
     .catch((error) => {
       console.error('Error:', error);
@@ -58,6 +62,12 @@ const processCode = (code) => {
 //     });
 // }
 
+const urls = [  
+  'https://www.torontopubliclibrary.ca/books-video-music/books/',  
+  'https://www.oshawa.ca/en/parks-recreation-and-culture/bright-and-merry-market.aspx',
+  'https://doc.sitecore.com/search/en/users/search-user-guide/sources.html'
+];  
+
 // This is just another version of the "getSourceCode" function that gets JUST the head.
 async function extractMetaAndTitleFromUrl(url) {  
   const response = await axios.get(url);  
@@ -71,10 +81,10 @@ for (let i = 0; i < metaTags.length; i++) {
 }  
 const title = dom.window.document.querySelector('title');
 metaStrings.push(title.outerHTML)
-return metaStrings;
-}  
 
-// extractMetaAndTitleFromUrl('https://www.pbs.org/parents/halloween')
+return metaStrings;
+
+}  
 
 function chunkSourceCode(sourceCode) {
   const textSegments = [];
@@ -90,17 +100,18 @@ function chunkSourceCode(sourceCode) {
 
 async function pathFinder() {
 
-  const sourceCode = await extractMetaAndTitleFromUrl('https://www.pbs.org/parents/halloween');
-  // const chunkedCode = chunkSourceCode(sourceCode);
+  const sourceCodes = [];
 
-  // const aiReponsePromise = chunkedCode.map(code => processCode(code))
-  
+  for (const url of urls) {  
+    const tags = await extractMetaAndTitleFromUrl(url);  
+    sourceCodes.push(tags);
+  }  
+
   console.log('Fetching AI reponses...')
-  
-  const response = await processCode(sourceCode);
-  // const responses = await Promise.all(aiReponsePromise)
-  console.log(response);
-  // responses.forEach(resp => console.log(resp))
+
+  for (let j = 0; j < sourceCodes.length; j++) {
+    let response = await processCode(sourceCodes[j]);
+  }
 }
 
 pathFinder();
