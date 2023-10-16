@@ -3,7 +3,20 @@ import axios from 'axios';
 import { JSDOM } from 'jsdom';  
 import fs from 'fs'; 
 
-const attributes = [];
+const areObjectsEqual = (obj1, obj2) => {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+  for (const key of keys1) {
+    if (!keys2.includes(key) || obj1[key] !== obj2[key]) {  
+      return false;  
+    }  
+  }    
+  return true;  
+}
 
 const processCode = (code) => {
 
@@ -17,7 +30,7 @@ const processCode = (code) => {
   const requestData = {
     messages: [
       {
-        "role":"system","content":"Only respond with an array of objects with no other text. The objects should have the following format: {\"name\": \"\", \"xpath\": \"\"}. If there is no valid array of objects to return, just return an empty array."
+        "role":"system","content":"Only respond with an array of objects with no other text. The objects represent attributes and the xpath expression that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\"}."
       },
       // {
       //   role: 'user',
@@ -25,7 +38,7 @@ const processCode = (code) => {
       // }
       {
         role: 'user',
-        content: `Can you look at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes? If an attribute does not appear to be in the HTML tags, do not return an object for it.`
+        content: `Can you look at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes?`
       },
     ],
     "temperature": 0,
@@ -39,9 +52,9 @@ const processCode = (code) => {
     .then((response) => response.json())
     .then((data) => {
       const tempArr = data.choices[0].message.content
+      console.log("tempArr: ", tempArr)
       let actualArr = JSON.parse(tempArr.replace(/\n|\s/g, ''))
-      attributes.push(...actualArr)
-      return attributes;
+      return actualArr;
     })
     .catch((error) => {
       console.error('Error:', error);
@@ -60,13 +73,7 @@ const processCode = (code) => {
 //     .catch(error => {
 //       console.error('Error:', error);
 //     });
-// }
-
-const urls = [  
-  'https://www.torontopubliclibrary.ca/books-video-music/books/',  
-  'https://www.oshawa.ca/en/parks-recreation-and-culture/bright-and-merry-market.aspx',
-  'https://doc.sitecore.com/search/en/users/search-user-guide/sources.html'
-];  
+// } 
 
 // This is just another version of the "getSourceCode" function that gets JUST the head.
 async function extractMetaAndTitleFromUrl(url) {  
@@ -97,8 +104,15 @@ function chunkSourceCode(sourceCode) {
   return textSegments;
 }
 
-
 async function pathFinder() {
+
+  const attributes = [];
+
+  const urls = [  
+    'https://www.torontopubliclibrary.ca/books-video-music/books/',  
+    'https://www.oshawa.ca/en/parks-recreation-and-culture/bright-and-merry-market.aspx',
+    'https://doc.sitecore.com/search/en/users/search-user-guide/sources.html'
+  ]; 
 
   const sourceCodes = [];
 
@@ -110,8 +124,17 @@ async function pathFinder() {
   console.log('Fetching AI reponses...')
 
   for (let j = 0; j < sourceCodes.length; j++) {
-    let response = await processCode(sourceCodes[j]);
+    const attrArr = await processCode(sourceCodes[j]);
+    attrArr.forEach(item1 => {  
+      if (!attributes.some(item2 => areObjectsEqual(item1, item2))) {  
+        attributes.push(item1);  
+      }  
+    })
   }
+
+  
+  return attributes;
 }
 
-pathFinder();
+const attrExtractionObjs = await pathFinder();
+console.log(attrExtractionObjs);
