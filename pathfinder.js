@@ -19,6 +19,7 @@ const areObjectsEqual = (obj1, obj2) => {
 }
 
 const processCode = (code) => {
+
   const apiUrl = 'https://sitecoreopenai-sandbox-et.openai.azure.com/openai/deployments/GPT-Test/chat/completions?api-version=2023-07-01-preview';
 
   const headers = {
@@ -29,8 +30,12 @@ const processCode = (code) => {
   const requestData = {
     messages: [
       {
-        "role":"system","content":"Only respond with an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio Jquery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}."
+        "role":"system","content":"Only respond with an array of objects with no other text. The objects represent attributes and the xpath expression that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\"}."
       },
+      // {
+      //   role: 'user',
+      //   content: 'Can you look at the following URL: https://www.pbs.org/parents/halloween and give me a synopsis of what the page is about?'
+      // }
       {
         role: 'user',
         content: `Can you look at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes?`
@@ -56,6 +61,21 @@ const processCode = (code) => {
     });
 }
 
+// function getSourceCode() {
+//   return fetch('https://doc.sitecore.com/search/en/users/search-user-guide/sources.html')
+//     .then(response => {
+//       if (response.ok) {
+//         return response.text();
+//       } else {
+//         throw new Error('Network response was not ok');
+//       }
+//     })
+//     .catch(error => {
+//       console.error('Error:', error);
+//     });
+// } 
+
+// This is just another version of the "getSourceCode" function that gets JUST the head.
 async function extractMetaAndTitleFromUrl(url) {  
   const response = await axios.get(url);  
   const html = response.data;  
@@ -63,23 +83,35 @@ async function extractMetaAndTitleFromUrl(url) {
   const metaTags = dom.window.document.querySelectorAll('meta');  
 
   const metaStrings = [];  
-  for (let i = 0; i < metaTags.length; i++) {  
-    metaStrings.push(metaTags[i].outerHTML)
-  }  
-  const title = dom.window.document.querySelector('title');
-  metaStrings.push(title.outerHTML)
+for (let i = 0; i < metaTags.length; i++) {  
+  metaStrings.push(metaTags[i].outerHTML)
+}  
+const title = dom.window.document.querySelector('title');
+metaStrings.push(title.outerHTML)
 
-  return metaStrings;
+return metaStrings;
+
 }  
 
-async function pathFinder() {
-  const attributesByName = {}; // Store attributes grouped by name
+function chunkSourceCode(sourceCode) {
+  const textSegments = [];
+  const maxTokens = 4000;
+  const stringWithoutTabs = sourceCode.replace(/\s{2,}/g, ' ');
+  
+  for (let i = 0; i < stringWithoutTabs.length; i += maxTokens) {
+    textSegments.push(stringWithoutTabs.substring(i, i + maxTokens));
+  }
+  return textSegments;
+}
 
-  const urls = [
-    'https://www.rbcroyalbank.com/en-ca/my-money-matters/debt-and-stress-relief/struggling-to-make-ends-meet/managing-and-consolidating-debt/6-ways-to-help-manage-your-debt-during-a-financial-crisis/',  
+async function pathFinder() {
+
+  const attributes = [];
+
+  const urls = [  
+    'https://www.torontopubliclibrary.ca/books-video-music/books/',  
     'https://www.oshawa.ca/en/parks-recreation-and-culture/bright-and-merry-market.aspx',
-    'https://www.whitby.ca/en/play/arenas-and-skating.aspx',
-    'https://www.pbs.org/parents/printables/jamming-on-the-job-robotics-engineer'
+    'https://doc.sitecore.com/search/en/users/search-user-guide/sources.html'
   ]; 
 
   const sourceCodes = [];
@@ -89,22 +121,18 @@ async function pathFinder() {
     sourceCodes.push(tags);
   }  
 
-  console.log('Fetching AI responses...')
+  console.log('Fetching AI reponses...')
 
   for (let j = 0; j < sourceCodes.length; j++) {
     const attrArr = await processCode(sourceCodes[j]);
-    attrArr.forEach(item1 => {
-      const name = item1.name; // Extract the attribute name
-      if (!attributesByName[name]) {
-        attributesByName[name] = []; // Initialize an array for the name if it doesn't exist
-      }
-      attributesByName[name].push(item1); // Push the attribute object to the corresponding name's array
-    });
+    attrArr.forEach(item1 => {  
+      if (!attributes.some(item2 => areObjectsEqual(item1, item2))) {  
+        attributes.push(item1);  
+      }  
+    })
   }
 
-  // Convert the grouped attributes back to a flat array
-  const attributes = Object.values(attributesByName).flat();
-
+  
   return attributes;
 }
 
