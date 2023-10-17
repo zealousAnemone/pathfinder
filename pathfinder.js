@@ -1,7 +1,11 @@
 import fetch from 'node-fetch';
 import axios from 'axios'; 
 import { JSDOM } from 'jsdom';  
-import fs from 'fs'; 
+import fs from 'fs';  
+import dotenv from 'dotenv' ;
+  
+// Load the environment variables from the .env file  
+dotenv.config();  
 
 // Function to check if two objects are equal
 const areObjectsEqual = (obj1, obj2) => {
@@ -27,13 +31,13 @@ const processCode = (code) => {
 
   const headers = {
     'Content-Type': 'application/json',
-    'api-key': '95e3d36e83884506ae19c44fc482ac05',
+    'api-key': process.env.API_KEY,
   };
 
   const requestData = {
     messages: [
       {
-        "role":"system","content":"Only look in the content defined by the function extractMetaAndTitleFromUrl(url). Only respond with an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio JjQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}. If you cannot find an attribute for a specific URL looking ONLY in the specified tags return {\"name\": \"\", notfound."
+        "role":"system","content":"Only respond with an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio JjQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}. If you cannot find an attribute looking ONLY in the specified tags return {\"name\": \"\", \"xpath\": \"notfound.\"}"
       },
       {
         role: 'user',
@@ -56,7 +60,6 @@ const processCode = (code) => {
         {'role': 'assistant', 'content': `'${botResponse.replace(/\n|\s/g, '')}'`},
       )
       let actualArr = JSON.parse(tempArr.replace(/\n|\s/g, ''))
-      console.log("New request: ", requestData);
       return actualArr;
     })
     .catch((error) => {
@@ -83,7 +86,7 @@ async function extractMetaAndTitleFromUrl(url) {
 
 // Function to process multiple URLs and group attributes by name
 async function pathFinder() {
-  const attributesByName = {}; // Store attributes grouped by name
+  const attributes = [];
 
   const urls = [
     'https://www.rbcroyalbank.com/en-ca/my-money-matters/debt-and-stress-relief/struggling-to-make-ends-meet/managing-and-consolidating-debt/6-ways-to-help-manage-your-debt-during-a-financial-crisis/',  
@@ -103,17 +106,13 @@ async function pathFinder() {
 
   for (let j = 0; j < sourceCodes.length; j++) {
     const attrArr = await processCode(sourceCodes[j]);
-    attrArr.forEach(item1 => {
-      const name = item1.name; // Extract the attribute name
-      if (!attributesByName[name]) {
-        attributesByName[name] = []; // Initialize an array for the name if it doesn't exist
-      }
-      attributesByName[name].push(item1); // Push the attribute object to the corresponding name's array
-    });
+    attrArr.forEach(item1 => {  
+      if (!attributes.some(item2 => areObjectsEqual(item1, item2))) {  
+        attributes.push(item1);  
+      }  
+    })
   }
 
-  // Convert the grouped attributes back to a flat array
-  const attributes = Object.values(attributesByName).flat();
 
   return attributes;
 }
