@@ -31,11 +31,11 @@ const processCode = (code) => {
   const requestData = {
     messages: [
       {
-        "role":"system","content":"Only respond with an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio Jquery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}."
+        "role":"system","content":"Only look in the content defined by the function extractMetaAndTitleFromUrl(url). Only respond with an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio JjQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}. If you cannot find an attribute for a specific URL looking ONLY in the specified tags return {\"name\": \"\", notfound."
       },
       {
         role: 'user',
-        content: `Can you look at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes?`
+        content: `Only Can you look at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes?`
       },
     ],
     "temperature": 0,
