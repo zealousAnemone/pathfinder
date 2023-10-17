@@ -35,12 +35,8 @@ const processCode = (code) => {
   const requestData = {
     messages: [
       {
-        "role":"system","content":"Only respond with an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio JjQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}. If you cannot find an attribute looking ONLY in the specified tags return {\"name\": \"\", \"xpath\": \"notfound.\"}"
+        "role":"system","content":"Only respond with an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio jQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}. If you cannot find an attribute looking ONLY in the specified tags return {\"name\": \"\", \"xpath\": \"notfound.\"}"
       },
-      // {
-      //   role: 'user',
-      //   content: 'Can you look at the following URL: https://www.pbs.org/parents/halloween and give me a synopsis of what the page is about?'
-      // }
       {
         role: 'user',
         content: `Only Can you look at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes?`
@@ -100,10 +96,6 @@ metaStrings.push(title.outerHTML)
 return metaStrings;
 
 }  
-
-// Function to process multiple URLs and group attributes by name
-async function pathFinder() {
-  const attributes = [];
 
 async function pathFinder() {
 
