@@ -19,8 +19,10 @@ const areObjectsEqual = (obj1, obj2) => {
 }
 
 const processCode = (code) => {
-
+  // https://sitecoreopenai-sandbox-et.openai.azure.com/openai/deployments/Test/completions?api-version=2023-09-15-preview
   const apiUrl = 'https://sitecoreopenai-sandbox-et.openai.azure.com/openai/deployments/GPT-Test/chat/completions?api-version=2023-07-01-preview';
+
+  let botResponse = '';
 
   const headers = {
     'Content-Type': 'application/json',
@@ -52,8 +54,12 @@ const processCode = (code) => {
     .then((response) => response.json())
     .then((data) => {
       const tempArr = data.choices[0].message.content
-      console.log("tempArr: ", tempArr)
+      botResponse = tempArr;
+      requestData.messages.push(
+        {'role': 'assistant', 'content': `'${botResponse.replace(/\n|\s/g, '')}'`},
+      )
       let actualArr = JSON.parse(tempArr.replace(/\n|\s/g, ''))
+      console.log("New request: ", requestData);
       return actualArr;
     })
     .catch((error) => {
