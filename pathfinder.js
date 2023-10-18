@@ -36,7 +36,7 @@ const processCode = (code) => {
     messages: [
       {
         "role": "system",
-        "content": "Only respond an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio jQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}. If you cannot find an attribute looking ONLY in the specified tags, return {\"URL\":\"\", \"name\": \"\", \"xpath\": \"notfound.\"}. You should look for suitable attribiutes in the following order: 1) meta tags 2) any other tag. DO not return names other than what the user specified."
+        "content": "Only respond an array of objects with no other text. The objects represent attributes from a given URL and the 1) Xpath expression and 2) cheerio jQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\", \"url\": \"\"}. If you cannot find an attribute looking ONLY in the specified tags, return {\"URL\":\"\", \"name\": \"\", \"xpath\": \"notfound.\"}. You should look for suitable attribiutes in the following order: 1) meta tags 2) any other tag. DO not return names other than what the user specified."
       },
       {
         role: 'user',
@@ -113,7 +113,7 @@ async function extractDataFromUrl(url) {
   })
 
   // pushes all retrieved tags to empty array
-  dataStrings = [...metaTags, title, ...h1Elements, ...h2Elements, ...h3Elements, ...images, ...divs];
+  dataStrings = [url, ...metaTags, title, ...h1Elements, ...h2Elements, ...h3Elements, ...images, ...divs];
   return dataStrings;
 }
 
