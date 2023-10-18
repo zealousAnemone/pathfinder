@@ -39,7 +39,7 @@ const processCode = (code) => {
       },
       {
         role: 'user',
-        content: `Only Can you look at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes?`
+        content: `Can you look ONLY at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes? Look in the meta tags first, and if you don't find anything there, look in heading tags, image tags, or p tags.`
       },
     ],
     "temperature": 0,
@@ -65,35 +65,31 @@ const processCode = (code) => {
     });
 }
 
-// function getSourceCode() {
-//   return fetch('https://doc.sitecore.com/search/en/users/search-user-guide/sources.html')
-//     .then(response => {
-//       if (response.ok) {
-//         return response.text();
-//       } else {
-//         throw new Error('Network response was not ok');
-//       }
-//     })
-//     .catch(error => {
-//       console.error('Error:', error);
-//     });
-// } 
-
 // This is just another version of the "getSourceCode" function that gets JUST the head.
-async function extractMetaAndTitleFromUrl(url) {  
+async function extractDataFromUrl(url) {  
   const response = await axios.get(url);  
   const html = response.data;  
-  const dom = new JSDOM(html);  
-  const metaTags = dom.window.document.querySelectorAll('meta');  
+  const dom = new JSDOM(html);
+  
+  let dataStrings = [];
+  
+  // Gets meta tags
+  const metaTags = [...dom.window.document.querySelectorAll('meta')].map(elem => elem.outerHTML);  
 
-  const metaStrings = [];  
-for (let i = 0; i < metaTags.length; i++) {  
-  metaStrings.push(metaTags[i].outerHTML)
-}  
-const title = dom.window.document.querySelector('title');
-metaStrings.push(title.outerHTML)
+  // gets title element
+  const title = dom.window.document.querySelector('title').outerHTML;
 
-return metaStrings;
+  // gets all headings from h1 - h3
+  const h1Elements = [...dom.window.document.getElementsByTagName('h1')].map(elem => elem.outerHTML.replace(/\n/g, ' '));
+  const h2Elements = [...dom.window.document.getElementsByTagName('h2')].map(elem => elem.outerHTML.replace(/\n/g, ' '));
+  const h3Elements = [...dom.window.document.getElementsByTagName('h3')].map(elem => elem.outerHTML.replace(/\n/g, ' '));
+
+  // gets all img tags
+  const images = [...dom.window.document.getElementsByTagName('img')].map(elem => elem.outerHTML);
+
+  // pushes all retrieved tags to empty array
+  dataStrings = [...metaTags, title, ...h1Elements, ...h2Elements, ...h3Elements, ...images];
+  return dataStrings;
 
 }  
 
@@ -104,14 +100,16 @@ async function pathFinder() {
   const urls = [  
     'https://www.torontopubliclibrary.ca/books-video-music/books/',  
     'https://www.oshawa.ca/en/parks-recreation-and-culture/bright-and-merry-market.aspx',
-    'https://doc.sitecore.com/search/en/users/search-user-guide/sources.html'
+    'https://doc.sitecore.com/search/en/users/search-user-guide/sources.html',
+    'https://veronica-stork.com'
   ]; 
 
   const sourceCodes = [];
 
   for (const url of urls) {  
-    const tags = await extractMetaAndTitleFromUrl(url);  
+    const tags = await extractDataFromUrl(url);  
     sourceCodes.push(tags);
+
   }  
 
   console.log('Fetching AI reponses...')
