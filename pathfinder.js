@@ -36,11 +36,11 @@ const processCode = (code) => {
     messages: [
       {
         "role": "system",
-        "content": "Only respond with an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio jQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}. If you cannot find an attribute looking ONLY in the specified tags return {\"name\": \"\", \"xpath\": \"notfound.\"}"
+        "content": "Only respond an array of objects with no other text. The objects represent attributes and the 1) Xpath expression and 2) cheerio jQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\"}. If you cannot find an attribute looking ONLY in the specified tags, return {\"URL\":\"\", \"name\": \"\", \"xpath\": \"notfound.\"}. You should look for suitable attribiutes in the following order: 1) meta tags 2) any other tag. DO not return names other than what the user specified."
       },
       {
         role: 'user',
-        content: `Only Can you look at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes?`
+        content: ` Can you look at the following array of HTML tags: ${code}, then find attributes that represent the title, description, image URL, site URL, locale, and subtitle along with xpath expressions for extracting those attributes?`
       },
     ],
     "temperature": 0,
