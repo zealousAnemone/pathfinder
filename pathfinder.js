@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import dotenv from 'dotenv';
+// import {urls} from './urls.js';
 
 // Load the environment variables from the .env file  
 dotenv.config();
@@ -43,7 +44,7 @@ const processCode = (code) => {
     messages: [
       {
         "role": "system",
-        "content": "Only respond an array of objects with no other text. The objects represent attributes from a given URL and the 1) Xpath expression and 2) cheerio jQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\", \"url\": \"\"}. If you cannot find an attribute looking ONLY in the specified tags, return {\"URL\":\"\", \"name\": \"\", \"xpath\": \"notfound.\"}. You should look for suitable attribiutes in the following order: 1) meta tags 2) any other tag. DO not return names other than what the user specified."
+        "content": "Only look at the HTML provided by the user. Only respond an array of objects with no other text. The objects represent attributes from a given URL and the 1) Xpath expression and 2) cheerio jQuery function that you would use to extract them from the given code. The objects should have the following format, with name being lowercase with words separated by underscores: {\"name\": \"\", \"xpath\": \"\", \"JS\": \"\", \"url\": \"\"}. If you cannot find an attribute looking ONLY in the tags provided by the user, return {\"URL\":\"\", \"name\": \"\", \"xpath\": \"notfound.\"}. You should look for suitable attribiutes in the following order: 1) meta tags, 2) heading tags (h1-h6), 3) image tags (img). DO not return names other than what the user specified."
       },
       {
         role: 'user',
@@ -139,6 +140,7 @@ async function pathFinder() {
 
   for (const url of urls) {  
     const tags = await extractDataFromUrl(url);  
+    // console.log("URL: ", url, " tags: ", tags)
     sourceCodes.push(tags);
 
   }  
