@@ -13,17 +13,24 @@ const areObjectsEqual = (obj1, obj2) => {
   if (keys1.length !== keys2.length) {
     return false;
   }
-  for (const key of keys1) {
-    if (!keys2.includes(key) || obj1[key] !== obj2[key]) {
+
+  for (let i = 0; i < 3; i++) {
+    if (!keys2.includes(keys1[i]) || obj1[keys1[i]] !== obj2[keys1[i]]) {
       return false;
     }
   }
+
+  // for (const key of keys1) {
+  //   if (!keys2.includes(key) || obj1[key] !== obj2[key]) {
+  //     return false;
+  //   }
+  // }
   return true;
 }
 
 const processCode = (code) => {
 
-  const apiUrl = 'https://sitecoreopenai-sandbox-et.openai.azure.com/openai/deployments/GPT-Test/chat/completions?api-version=2023-07-01-preview';
+  const apiUrl = process.env.API_URL;
 
   let botResponse = '';
 
@@ -136,18 +143,45 @@ async function pathFinder() {
 
   }  
 
-  console.log(sourceCodes);
-
   console.log('Fetching AI reponses...')
 
-  for (let j = 0; j < sourceCodes.length; j++) {
-    const attrArr = await processCode(sourceCodes[j]);
-    attrArr.forEach(item1 => {
-      if (!attributes.some(item2 => areObjectsEqual(item1, item2))) {
-        attributes.push(item1);
-      }
-    })
-  }
+  for (let j = 0; j < sourceCodes.length; j++) {  
+    const attrArr = await processCode(sourceCodes[j]);  
+    attrArr.forEach(item1 => {  
+      let temp = [];  
+      let found = false;  
+      attributes.forEach(item2 => {  
+        if (areObjectsEqual(item1, item2)) {  
+          found = true;  
+          item2.used_in.push(item1.url)
+        }  
+      });  
+      if (!found) {  
+        let newItem = Object.assign({}, item1);  
+        newItem.used_in = [newItem.url];  
+        delete newItem.url;  
+        temp.push(newItem);  
+      } 
+      attributes.push(...temp);  
+    });  
+  } 
+  // for (let j = 0; j < sourceCodes.length; j++) {  
+  //   const attrArr = await processCode(sourceCodes[j]);  
+  //   attrArr.forEach(item1 => {
+  //     let tempArr = [];
+  //     // for each attr object, check if there is a corresponding object in the shared attributes array
+  //     attributes.forEach(item2 => {
+  //       if (!areObjectsEqual(item1, item2)) {
+  //         let tempObj = Object.assign({}, item1);
+  //         tempObj.used_in = [item1.url];
+  //         delete tempObj.url;
+  //         // if object with same name, xpath, and js values does NOT exist, push the current object to the shared array
+  //         tempArr.push(tempObj);
+  //       }
+  //     })
+      
+  //   })
+  // }  
 
   return attributes;
 }
