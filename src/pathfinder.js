@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import dotenv from 'dotenv';
-// import {urls} from './urls.js';
+import urls from './urls.js';
 
 // Load the environment variables from the .env file  
 dotenv.config();
