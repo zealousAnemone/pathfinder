@@ -117,16 +117,9 @@ async function extractDataFromUrl(url) {
   return dataStrings;
 }
 
-async function pathFinder() {
+export default async function pathFinder(urls) {
 
   const attributes = [];
-
-  const urls = [
-    'https://www.torontopubliclibrary.ca/books-video-music/books/',
-    'https://www.oshawa.ca/en/parks-recreation-and-culture/bright-and-merry-market.aspx',
-    'https://doc.sitecore.com/search/en/users/search-user-guide/sources.html',
-    'https://veronica-stork.com'
-  ]; 
 
   const sourceCodes = [];
 
@@ -151,6 +144,3 @@ async function pathFinder() {
 
   return attributes;
 }
-
-const attrExtractionObjs = await pathFinder();
-console.log(attrExtractionObjs);
