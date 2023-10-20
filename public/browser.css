@@ -37,6 +37,7 @@ body {
 .find-button {
   width: 200px;
   padding: 10px 20px;
+  font-weight: bold;
 }
 
 .field-label {

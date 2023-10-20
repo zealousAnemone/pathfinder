@@ -1,9 +1,12 @@
 async function runPathFinder() {
   const urls = document.getElementById('url-input')
     .value
-    .trim()
     .replace(/[\s\n]+/g, '')
     .split(',')
+
+  const button = document.getElementById('find-button');
+  button.innerHTML = "AI Senses Tingling..."
+  button.disabled = true;
 
   const resp = await axios({
     method: 'post',
@@ -16,7 +19,12 @@ async function runPathFinder() {
     console.error(err)
   })
 
-  document.getElementById('paths-output').value = JSON.stringify(resp, null, 2)
+  button.innerHTML = "Find"
+  button.disabled = false;
+  const pathsTextarea = document.getElementById('paths-output')
+  pathsTextarea.value = JSON.stringify(resp, null, 2)
+  pathsTextarea.style.height = '';
+  pathsTextarea.style.height = pathsTextarea.scrollHeight + "px"
 }
 
 // pre-filling UI text box with URLs

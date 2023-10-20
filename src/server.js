@@ -19,8 +19,13 @@ app.get('/urls', async (req, res) => {
 app.post('/pathfinder', async (req, res) => {
   const urls = req.body.urls
   console.log(urls)
-  const attrExtractionObjs = await pathFinder(urls)
-  return res.json(attrExtractionObjs)
+  try {
+    const attrExtractionObjs = await pathFinder(urls)
+    return res.json(attrExtractionObjs)
+  } catch (error) {
+    console.log('Breaking at pathfinder() call')
+  }
+
 })
 
 app.listen(port, () => {

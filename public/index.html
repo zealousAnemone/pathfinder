@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>URL Analyzer</title>
+  <title>Pathfinder</title>
   <link href=browser.css rel="stylesheet" />
 </head>
 
@@ -14,7 +14,7 @@
       <label class="field-label" for="url-input">Enter URLs</label>
       <textarea type="text" id="url-input" class="urls-input" placeholder="Enter comma seperated URLs here..." rows="5">
       </textarea>
-      <button onclick="runPathFinder()" class="find-button">Find!</button>
+      <button id="find-button" onclick="runPathFinder()" class="find-button">Find</button>
     </div>
     <div>
       <label class="field-label" for="paths-output">Paths Found</label>
