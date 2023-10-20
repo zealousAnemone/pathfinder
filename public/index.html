@@ -4,20 +4,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>URL Analyzer</title>
+  <title>Pathfinder</title>
   <link href=browser.css rel="stylesheet" />
 </head>
 
 <body>
   <div class="container">
+    <h1>Pathfinder</h1>
     <div class="input-fields">
       <label class="field-label" for="url-input">Enter URLs</label>
+      <div class="subtext">Provide a comma-separated list of URLs for which you want attributes and extraction paths.</div>
       <textarea type="text" id="url-input" class="urls-input" placeholder="Enter comma seperated URLs here..." rows="5">
       </textarea>
-      <button onclick="runPathFinder()" class="find-button">Find!</button>
+      <button id="find-button" onclick="runPathFinder()" class="find-button">Find</button>
     </div>
-    <div>
+    <div class="output-fields">
       <label class="field-label" for="paths-output">Paths Found</label>
+      <div class="subtext">XPath expressions and JavaScript functions, accompanied by the number of URLs to which each applies.</div>
       <textarea rows="10" id="paths-output" class="paths-output" readonly></textarea>
     </div>
   </div>
