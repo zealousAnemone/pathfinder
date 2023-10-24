@@ -1,5 +1,8 @@
 # pathfinder
 
+### Prerequisite
+1. You need an Open AI API key and chat/completions endpoint. 
+
 ### To run
 1. Create a branch from Main.
 2. In the pathfinder directory on your system, create a .env file with the following info:
